@@ -1,6 +1,6 @@
 # Real-time-INS-python
 
-Tensorflow를 이용한 실시간 딥러닝 기반 관성항법시스템입니다.
+Tensorflow를 이용한 딥러닝 기반 관성항법시스템입니다.
 
 ## Requirements
 

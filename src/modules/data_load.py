@@ -82,12 +82,13 @@ class GlobSpeedSequence(CompiledSequence):
 
 
 class RoninResnetDataset:
-    def __init__(self, seq_type, step_size, window_size, random_shift, transform, data_list, **kwargs):
+    def __init__(self, seq_type, step_size, window_size, random_shift, transform, data_list, batch_size, **kwargs):
         self.step_size = step_size
         self.window_size = window_size
         self.random_shift = random_shift
         self.transform = transform
         self.shuffle = kwargs.get('shuffle', True)
+        self.batch_size = batch_size
 
         self.index_map = []
         self.features, self.targets, aux = load_cached_sequences(
@@ -95,19 +96,23 @@ class RoninResnetDataset:
         for i in range(len(data_list)):
             self.index_map += [[i, j] for j in range(0, self.targets[i].shape[0], step_size)]
     
-    def __getitem__(self, item):
-        seq_id, frame_id = self.index_map[item][0], self.index_map[item][1]
-        if self.random_shift > 0:
-            frame_id += random.randrange(-self.random_shift, self.random_shift)
-            frame_id = max(self.window_size, min(frame_id, self.targets[seq_id].shape[0] - 1))
+    def __call__(self, item):
+        feat, targ = [], []
+        for i in range(self.batch_size):
+            seq_id, frame_id = self.index_map[item*self.batch_size+i][0], self.index_map[item*self.batch_size+i][1]
+            if self.random_shift > 0:
+                frame_id += random.randrange(-self.random_shift, self.random_shift)
+                frame_id = max(self.window_size, min(frame_id, self.targets[seq_id].shape[0] - 1))
 
-        feat = self.features[seq_id][frame_id:frame_id + self.window_size]
-        targ = self.targets[seq_id][frame_id]
+            feat.append(self.features[seq_id][frame_id:frame_id + self.window_size])
+            targ.append(self.targets[seq_id][frame_id])
 
-        if self.transform is not None:
-            feat, targ = self.transform(feat, targ)
+            if self.transform is not None:
+                feat[i], targ[i] = self.transform(feat[i], targ[i])
+                # feat[i] = feat[i].astype(np.float32).T
+                # targ[i] = targ[i].astype(np.float32).T
 
-        return feat.astype(np.float32).T, targ.astype(np.float32), seq_id, frame_id
+        return np.array(feat), np.array(targ), seq_id, frame_id
     
     def random_shuffle(self):
         if self.shuffle:

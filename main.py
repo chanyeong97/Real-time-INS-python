@@ -1,6 +1,8 @@
 import argparse
+import tensorflow as tf
 
 from src.modules.ronin_resnet import train_ronin_resnet
+
 
 
 def parse_args():
@@ -32,6 +34,9 @@ def test(args):
 
 if __name__ == '__main__':
     args = parse_args()
+    gpus = tf.config.experimental.list_physical_devices('GPU')
+    for gpu in gpus:
+        tf.config.experimental.set_memory_growth(gpu, True)
     
     if args.mode == 'train':
         train(args)

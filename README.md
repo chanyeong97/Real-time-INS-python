@@ -13,7 +13,7 @@ Tensorflow를 이용한 딥러닝 기반 관성항법시스템입니다
 
 ## 데이터
 
-- [RoNIN](https://github.com/Sachini/ronin/blob/master/README.md) dataset
+- [RoNIN](https://github.com/Sachini/ronin) dataset
 - OXIOD dataset
 
 ## 학습
